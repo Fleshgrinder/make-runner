@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+#!
+#! Prints the given text inside a cyan box to STDOUT. Text must be passed in
+#! either as an argument or via STDIN.
+#!
+
+box "${BOX_CYAN}" "$@"

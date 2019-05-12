@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+#!
+#! Collects all make goals of the current Makefile and prints a human-readable
+#! message that lists them all with a short description.
+#!
+#! See `resources/make/boostrap.mk` for the corresponding `goals` goal, which is
+#! the default goal if no other goal was set as the default explicitly.
+#!
+
+readonly pad=25
+
+echo -e "
+${FG_YELLOW}Usage:${RESET_COLORS}
+    make [flag...] [goal...] [option...]
+
+${FG_YELLOW}Flags:${RESET_COLORS}
+    See ${FG_WHITE}make --help${RESET_COLORS}
+
+${FG_YELLOW}Goals:${RESET_COLORS}"
+
+goals=()
+pattern='[^:]+:[^#]*## .*'
+
+for mk in "$@"; do
+    while read -r line; do
+        if [[ "${line}" =~ ${pattern} ]]; then
+            goals+=("${line}")
+        fi
+    done < "${mk}"
+done
+
+readarray -t goals < <(for t in "${goals[@]}"; do echo "$t"; done | sort -d)
+
+for goal in "${goals[@]}"; do
+    printf "    %b%-${pad}s%b %s\n" \
+        "${FG_GREEN}" \
+        "${goal%%:*}" \
+        "${RESET_COLORS}" \
+        "${goal##*## }"
+done
+
+echo -e "
+${FG_YELLOW}Options:${RESET_COLORS}
+    ${FG_GREEN}$(printf "%-${pad}s" "DEBUG=<mode>")${RESET_COLORS} Set mode to 1 for debug output ${FG_YELLOW}[default: 0]${RESET_COLORS}
+
+Visit ${FG_BLUE}https://github.com/Fleshgrinder/make-runner${RESET_COLORS} for more information.
+"

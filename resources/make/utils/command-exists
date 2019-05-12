@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+exec command -v "${1:?missing required argument <command>}" &>/dev/null

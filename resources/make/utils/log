@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+readonly color=${1:?missing required argument <color>}
+readonly severity=${2:?missing required argument <severity>}
+shift 2
+
+echo -e "${color}[${severity}]${RESET_COLORS} $*"

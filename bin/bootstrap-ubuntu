@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+#!
+#! Install recommended software for using make runner on a Ubuntu system.
+#!
+
+if (( EUID != 0 )); then
+    echo 'This script must be executed as root.' >&2
+    exit 64
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-install() {
+    apt-get update
+    apt-get install \
+        --auto-remove \
+        --no-install-recommends \
+        --no-install-suggests \
+        --show-upgraded \
+        --yes \
+        "$@"
+}
+
+apt-install \
+    apt-transport-https \
+    bash \
+    ca-certificates \
+    coreutils \
+    curl \
+    dirmngr \
+    dos2unix \
+    findutils \
+    gawk \
+    git \
+    gnupg-agent \
+    grep \
+    jq \
+    make \
+    sed \
+    software-properties-common \
+    tar
+
+readonly arch=$(dpkg --print-architecture)
+
+# https://hub.github.com/
+readonly hub_url=$(curl -fsSL https://api.github.com/repos/github/hub/releases/latest | jq -r ".assets[].browser_download_url | select(test(\"hub-linux-${arch}\"))")
+curl -fsSL "${hub_url}" | tar --strip=2 -xzf- "$(basename "${hub_url}" .tgz)/bin/hub"
+install -ma+rx -groot -oroot hub /usr/local/bin
+rm -f hub
+
+# https://docs.docker.com/install/linux/docker-ce/ubuntu
+readonly gpg_home=/tmp/make-runner-gpg
+mkdir -m700 "${gpg_home}"
+mkdir -m700 "${gpg_home}/.gnupg"
+echo disable-ipv6 >> "${gpg_home}/.gnupg/dirmngr.conf"
+gpg --homedir "${gpg_home}" --recv-keys --keyserver hkps://hkps.pool.sks-keyservers.net --recv 7EA0A9C3F273FCD8
+gpg --homedir "${gpg_home}" --export 9DC858229FC7DD38854AE2D88D81803C0EBFCD88 | apt-key add -
+rm -fr "${gpg_home}"
+add-apt-repository "deb [arch=${arch}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+for package in docker docker-engine docker.io containerd runc; do
+    apt-get purge --yes "${package}" || :
+done
+apt-install \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io

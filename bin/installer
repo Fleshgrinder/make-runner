@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+require-command() {
+    for command in "$@"; do
+        if ! command -v "${command}" >/dev/null 2>&1; then
+            os=
+            sudo=
+            case "${OSTYPE}" in
+                darwin*) os=mac ;;
+                linux*)
+                    if [[ -f /etc/os-release ]]; then
+                        ID=
+                        eval "$(cat /etc/os-release)"
+                        os=${ID}
+                        sudo='sudo '
+                    fi
+                    ;;
+            esac
+
+            echo "
+Could not find ${command} in your PATH, make sure it is available.
+" >&2
+            if [[ "${os}" != '' ]]; then
+                echo "\
+Execute the following command to automatically install the recommended \
+software on your system:
+
+${sudo}bash -c \"\$(curl -fsSL https://github.com/Fleshgrinder/make-runner/master/bin/bootstrap-${os})\"
+" >&2
+            fi
+            exit 69
+        fi
+    done
+}
+
+require-command curl grep jq tar
+
+tarball_url=$(curl -fsSL https://api.github.com/repos/Fleshgrinder/make-runner/releases/latest | jq -r '.tarball_url')
+
+(
+    rm -fr /tmp/make-runner/
+    mkdir -p /tmp/make-runner/
+    cd /tmp/make-runner || exit
+    curl -fsSL "${tarball_url}" | tar -xzf- --strip=1 --wildcards '*/bin/bootstrap-*' '*/resources/make/*'
+)
+
+mkdir -p resources/
+mv /tmp/make-runner/resources/make/ resources/
+mv /tmp/make-runner/bin/bootstrap-* resources/make/utils/
+rm -fr /tmp/make-runner/
+
+if [[ -f Makefile ]]; then
+    echo 'Found existing Makefile, not creating default Makefile'
+else
+    echo 'include resources/make/bootstrap.mk
+
+lint-shell: ## lint all shell scripts
+	shopt -s globstar
+	exec docker-run-secure koalaman/shellcheck:v0.6.0 \
+	    --check-sourced \
+	    --color=always \
+	    --external-sources \
+	    bin/*
+
+lint: lint-shell ## lint everything
+' > Makefile
+    make goals
+fi

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+#!
+#! Install recommended software for using make runner on a CentOS system.
+#!
+
+if (( EUID != 0 )); then
+    echo 'This script must be executed as root.' >&2
+    exit 64
+fi
+
+yum install -y epel-release
+yum install -y \
+    bash \
+    coreutils \
+    curl \
+    device-mapper-persistent-data \
+    dos2unix \
+    findutils \
+    gawk \
+    git \
+    gnupg \
+    grep \
+    hub \
+    jq \
+    lvm2 \
+    make \
+    readline \
+    sed \
+    tar \
+    yum-utils
+
+# https://docs.docker.com/install/linux/docker-ce/centos/
+yum remove \
+    docker \
+    docker-client \
+    docker-client-latest \
+    docker-common \
+    docker-latest \
+    docker-latest-logrotate \
+    docker-logrotate \
+    docker-engine
+
+# TODO how can we import the key for dnf on our own and verify the fingerprint?
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum install -y docker-ce docker-ce-cli containerd.io
