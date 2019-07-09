@@ -8,7 +8,7 @@
 
 # Determine the root directory of this repository which allows us to include
 # files, no matter from where we were invoked.
-override ROOT := $(shell p="$(CURDIR)"; while [[ "$$p" != / && ! -d "$$p/.git" ]]; do p="$${p%/*}"; done; echo "$$p")
+override ROOT := $(shell p="$(CURDIR)"; while [ "$$p" != / ] && [ ! -d "$$p/.git" ]; do p="$${p%/*}"; done; echo "$$p")
 export ROOT
 
 # Nobody should ever install this in the root.
