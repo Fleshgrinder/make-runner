@@ -80,6 +80,7 @@ BREW_PREFIX ?= /usr/local
 PATH := $(BREW_PREFIX)/opt/coreutils/libexec/gnubin:$(PATH)
 PATH := $(BREW_PREFIX)/opt/curl/bin:$(PATH)
 PATH := $(BREW_PREFIX)/opt/findutils/libexec/gnubin:$(PATH)
+PATH := $(BREW_PREFIX)/opt/gnu-getopt/bin:$(PATH)
 PATH := $(BREW_PREFIX)/opt/gnu-indent/libexec/gnubin:$(PATH)
 PATH := $(BREW_PREFIX)/opt/gnu-sed/libexec/gnubin:$(PATH)
 PATH := $(BREW_PREFIX)/opt/gnu-tar/libexec/gnubin:$(PATH)

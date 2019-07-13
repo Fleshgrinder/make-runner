@@ -17,6 +17,7 @@ brew install \
     findutils \
     gawk \
     git \
+    gnu-getopt \
     gnu-sed \
     gnu-tar \
     gnupg \
