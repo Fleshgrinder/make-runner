@@ -12,7 +12,7 @@ fi
 brew install \
     bash \
     coreutils \
-    curl \
+    curl-openssl \
     dos2unix \
     findutils \
     gawk \
