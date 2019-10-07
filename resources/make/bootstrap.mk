@@ -16,6 +16,9 @@ ifeq ($(ROOT),/)
 $(error Could not find root of repository, are you inside a make enabled repository? Ensure that `.makeroot` exists in the root of your repository.)
 endif
 
+# Make sure that we have a consistent locale handling across systems.
+export LC_ALL := C
+
 # Loads the user specific configuration.
 include $(ROOT)/resources/make/config.mk
 
