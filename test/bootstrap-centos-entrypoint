@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -e
+
+./resources/make/runner/bin/bootstrap-system

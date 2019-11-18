@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+docker run \
+    --entrypoint "$TESTDIR/bootstrap-centos-entrypoint" \
+    --rm \
+    --volume "$PWD:$PWD" \
+    --workdir "$PWD" \
+    centos

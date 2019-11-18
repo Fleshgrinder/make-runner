@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")"/..
+
+export TESTDIR="$PWD/test"
+export LOGDIR="$PWD/test/logs"
+
+rm -fr "$LOGDIR"
+mkdir -p "$LOGDIR"
+
+
+for test_case in test/*-test; do
+    TEST_NAME=$(basename "$test_case")
+    TEST_LOG="$LOGDIR/$TEST_NAME.log"
+    export TEST_NAME TEST_LOG
+    if ! "$test_case" &>"$TEST_LOG"; then
+        echo -e "$TEST_NAME failed (see $TEST_LOG)"
+    fi
+done

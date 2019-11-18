@@ -1,18 +1,18 @@
-#!
-#! User specific configuration file. This file stayes untouched during updates
-#! of your make framework and allows you to customize apsects of your
-#! installation.
-#!
+##
+## User specific configuration file. This file stayes untouched during updates
+## of your make-runner framework and allows you to customize apsects of your
+## installation.
+##
 
 # A task runner should not conditionally execute goals but rather always execute
 # them and this is exactly what this option does. The default user configuration
 # enables this mode because this is the most convenient mode to work with make
 # if you want to use it as a task runner. However, you can also drop this option
-# and use make's default mode of operation, which can be useful in various
+# and use make’s default mode of operation, which can be useful in various
 # situations.
 #
 # Note that the most efficient but also most anyoing way of making goals
-# unconditional is to use `.PHONY := goal` directly before you define your goal.
+# unconditional is to use `.PHONY: goal` directly before you define your goal.
 #
 # A less known feature of make are double-colon rules, see:
 # https://www.gnu.org/software/make/manual/html_node/Double_002dColon.html
@@ -29,3 +29,7 @@ MAKEFLAGS += --always-make
 #
 # https://www.gnu.org/software/make/manual/html_node/Special-Targets.html
 #.EXPORT_ALL_VARIABLES:
+
+# Uncomment the following line to include a dotenv file, requires the export-all
+# mode to have an effect (see previous section).
+#include .env

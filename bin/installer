@@ -1,69 +1,57 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-require-command() {
-    for command in "$@"; do
-        if ! command -v "${command}" >/dev/null 2>&1; then
-            os=
-            sudo=
-            case "${OSTYPE}" in
-                darwin*) os=mac ;;
-                linux*)
-                    if [[ -f /etc/os-release ]]; then
-                        ID=
-                        eval "$(cat /etc/os-release)"
-                        os=${ID}
-                        sudo='sudo '
-                    fi
-                    ;;
-            esac
+reset='\033[0m'
+magenta='\033[0;35m'
+red='\033[0;31m'
 
-            echo "
-Could not find ${command} in your PATH, make sure it is available.
-" >&2
-            if [[ "${os}" != '' ]]; then
-                echo "\
-Execute the following command to automatically install the recommended \
-software on your system:
-
-${sudo}bash -c \"\$(curl -fsSL https://github.com/Fleshgrinder/make-runner/master/bin/bootstrap-${os})\"
-" >&2
-            fi
-            exit 69
-        fi
-    done
+function error() {
+    status=$1
+    shift
+    echo -e "\n${red}[ERROR]${reset} $*\n" >&2
+    exit "$status"
 }
 
-require-command curl grep jq tar
+missing=
+for cmd in curl git jq make tar; do
+    if ! command -v "$cmd" &>/dev/null; then
+        [[ "$missing" == '' ]] || missing+=', '
+        missing+="$magenta$cmd$reset"
+    fi
+done
+if [[ "$missing" != '' ]]; then
+    error 80 "Could not find $missing in your ${magenta}PATH${reset}, make sure they are available."
+fi
 
-tarball_url=$(curl -fsSL https://api.github.com/repos/Fleshgrinder/make-runner/releases/latest | jq -r '.tarball_url')
+if ! root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    error 81 'Not a git repository, make-runner can only be installed in an' \
+        'existing git project, run git init if you want a new one and' \
+        'execute the installer again.'
+fi
+
+cd "$root"
+
+tarball_url=$(curl -fqsSL https://api.github.com/repos/Fleshgrinder/make-runner/releases/latest | jq -r '.tarball_url')
+
+tmpdir=$(mktemp --directory)
+trap 'rm -fr $tmpdir' EXIT
 
 (
-    rm -fr /tmp/make-runner/
-    mkdir -p /tmp/make-runner/
-    cd /tmp/make-runner || exit
-    curl -fsSL "${tarball_url}" | tar -xzf- --strip=1 --wildcards '*/bin/bootstrap-*' '*/resources/make/*'
+    cd "$tmpdir"
+    curl -fqsSL "$tarball_url" | tar -xzf --strip=1 --wildcards '*/bin/bootstrap-*' '*/resources/make/*'
 )
 
-mkdir -p resources/
-mv /tmp/make-runner/resources/make/ resources/
-mv /tmp/make-runner/bin/bootstrap-* resources/make/utils/
-rm -fr /tmp/make-runner/
+mkdir -p resources/make/
+mv "$tmpdir"/resources/make/ resources/make/
+
+include='include resources/make/runner/bootstrap.mk'
 
 if [[ -f Makefile ]]; then
-    echo 'Found existing Makefile, not creating default Makefile'
+    echo "$include
+
+$(cat Makefile)" >Makefile
 else
-    echo 'include resources/make/bootstrap.mk
-
-lint-shell: ## lint all shell scripts
-	shopt -s globstar
-	exec docker-run-secure koalaman/shellcheck:v0.6.0 \
-	    --check-sourced \
-	    --color=always \
-	    --external-sources \
-	    bin/*
-
-lint: lint-shell ## lint everything
-' > Makefile
-    make goals
+    echo "$include" >Makefile
 fi
+
+exec make help

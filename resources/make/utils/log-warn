@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-log "${FG_YELLOW}" WARN "$@" >&2
